@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-smb
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  # pv-smb adındaki PV ile eşleşmesini istiyoruz
+  volumeName: pv-smb
+  resources:
+    requests:
+      storage: 10Gi
+  # Bir StorageClass kullanmıyorsanız boş bırakın
+  storageClassName: ""
+

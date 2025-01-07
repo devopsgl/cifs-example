@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-smb
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  # pv-smb adındaki PV ile eşleşmesini istiyoruz
+  volumeName: pv-smb
+  resources:
+    requests:
+      storage: 10Gi
+  # Bir StorageClass kullanmıyorsanız boş bırakın
+  storageClassName: ""
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: smb-creds
+  namespace: default
+type: Opaque
+data:
+  username: dXNlcg==        # 'user'   -> base64('user')
+  password: dXNlcjEyMzQ=    # 'user1234' -> base64('user1234')
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    pv.kubernetes.io/provisioned-by: smb.csi.k8s.io
+  name: pv-smb
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  mountOptions:
+    - dir_mode=0555
+    - file_mode=0444
+    - vers=3.0
+  csi:
+    driver: smb.csi.k8s.io
+    # volumeHandle format: {smb-server-address}#{sub-dir-name}#{share-name}
+    # make sure this value is unique for every share in the cluster
+    volumeHandle: 192.168.1.38/public##
+    volumeAttributes:
+      source: //192.168.1.38/public
+    nodeStageSecretRef:
+      name: smb-creds
+      namespace: default
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: smb-test-pod
+  namespace: default
+spec:
+  containers:
+  - name: smb-container
+    image: ubuntu:latest
+    # Pod sonlanmasın diye basit bir uyku komutu
+    command: ["/bin/sh", "-c", "while true; do sleep 3600; done"]
+    volumeMounts:
+      - name: smb-vol
+        mountPath: /smb-data
+  volumes:
+  - name: smb-vol
+    persistentVolumeClaim:
+      claimName: pvc-smb

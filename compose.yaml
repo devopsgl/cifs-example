@@ -1,0 +1,22 @@
+version: '3.9'
+services:
+  samba:
+    image: dperson/samba:latest
+    container_name: samba
+    command: [
+      # -p: Parolasız erişimi kapatan, daha güvenli bir mod (paranoid)
+      "-p",
+      # Kullanıcı tanımlaması (kullanici_adı;parola)
+      "-u", "user;user1234",
+      # Paylaşım tanımlaması:
+      # Format: -s "PAYLASIM_ADI;KONTEYNER_ICI_KLASOR;okuma(yes/no);gözükme(yes/no);misafir(yes/no);kimlerErişebilir"
+      "-s", "public;/data;yes;yes;no;user"
+    ]
+    ports:
+      - "139:139"
+      - "445:445"
+    volumes:
+      # Host üzerindeki ./shared_folder klasörünü konteyner içindeki /data dizinine bağlıyoruz
+      - ./smb-vol:/data
+    restart: unless-stopped
+
