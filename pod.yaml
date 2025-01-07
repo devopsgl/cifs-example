@@ -42,6 +42,7 @@ spec:
     - vers=3.0
   csi:
     driver: smb.csi.k8s.io
+    
     # volumeHandle format: {smb-server-address}#{sub-dir-name}#{share-name}
     # make sure this value is unique for every share in the cluster
     volumeHandle: 192.168.1.38/public##
